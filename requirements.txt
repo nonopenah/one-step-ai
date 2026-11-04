@@ -1,0 +1,5 @@
+fastapi>=0.110
+uvicorn[standard]>=0.29
+jinja2>=3.1
+# 실제 LLM 연동 시에만 필요 (선택)
+# anthropic>=0.40

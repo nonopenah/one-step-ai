@@ -1,0 +1,8 @@
+[
+  {"id": "walk_10", "title": "집 밖으로 10분 걸어보기", "category": "일상", "level": 1, "purpose": "외출에 대한 부담을 낮추는 첫걸음", "how": "가까운 편의점이나 골목까지 걸어갔다 오세요. 시간이 짧아도 괜찮아요."},
+  {"id": "buy_drink", "title": "카페/편의점에서 직접 음료 사기", "category": "일상", "level": 1, "purpose": "카페 주문 연습을 실제 상황으로 확장", "how": "원하는 음료 하나를 직접 고르고 계산해보세요.", "from_scenario": "cafe_order"},
+  {"id": "say_hello", "title": "이웃·점원에게 먼저 인사해보기", "category": "대인관계", "level": 1, "purpose": "짧은 인사로 대면 접촉 경험 쌓기", "how": "엘리베이터나 가게에서 '안녕하세요' 한마디를 건네보세요.", "from_scenario": "greeting"},
+  {"id": "ask_small_favor", "title": "가까운 사람에게 작은 부탁하기", "category": "대인관계", "level": 2, "purpose": "도움 요청 경험 만들기", "how": "가족이나 친구에게 사소한 부탁 한 가지를 해보세요.", "from_scenario": "ask_help"},
+  {"id": "write_intro", "title": "자기소개 3줄 써보기", "category": "취업·진로", "level": 1, "purpose": "면접 연습 내용을 글로 정리", "how": "이름, 관심 분야, 배우고 싶은 것을 한 줄씩 적어보세요.", "from_scenario": "interview_intro"},
+  {"id": "check_program", "title": "관심 있는 지원 프로그램 한 곳 자세히 보기", "category": "취업·진로", "level": 1, "purpose": "지원 정보를 실제로 확인해보기", "how": "프로그램 상세에서 대상·일정·신청 방법을 읽어보세요.", "from_scenario": "inquiry_call"}
+]

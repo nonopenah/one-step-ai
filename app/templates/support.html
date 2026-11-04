@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}도움과 연결{% endblock %}
+{% block content %}
+<h1>도움과 연결</h1>
+<p class="muted">참여를 강요하지 않아요. 자격과 모집 여부는 반드시 공식 페이지에서 확인해주세요.<br>
+※ 현재 프로그램은 <b>샘플 데이터</b>입니다.</p>
+
+{% if recommended %}
+<h2>나에게 맞는 지원</h2>
+<div class="grid" id="rec"></div>
+{% endif %}
+
+<h2>전체 프로그램 탐색</h2>
+<div class="row" style="margin-bottom:12px">
+  <select id="f_field" style="width:auto"><option value="">분야 전체</option>{% for f in fields %}<option>{{ f }}</option>{% endfor %}</select>
+  <select id="f_region" style="width:auto"><option value="">지역 전체</option><option>서울</option></select>
+  <select id="f_mode" style="width:auto"><option value="">방식 전체</option><option>온라인</option><option>오프라인</option></select>
+  <input type="text" id="f_q" placeholder="검색" style="width:180px">
+</div>
+<div class="grid" id="list"></div>
+
+<h2>관심 프로그램</h2>
+<div class="grid" id="saved"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+const REC = {{ recommended|tojson }};
+let SAVED = new Set({{ saved_ids|tojson }});
+
+function card(p) {
+  const c = el("div", "card");
+  c.append(el("span", "tag", p.field), el("span", "tag", p.mode), el("span", "tag", p.region));
+  c.append(el("div", "", ""), el("b", "", p.title), el("div", "muted", p.summary));
+  c.append(el("div", "muted", "대상: " + p.target + " · " + p.org));
+  if (p.reason) c.append(el("div", "reason", p.reason));
+  const row = el("div", "row"); row.style.marginTop = "8px";
+  const save = el("button", "btn small", SAVED.has(p.id) ? "★ 저장됨" : "☆ 관심 저장");
+  save.onclick = async () => {
+    if (SAVED.has(p.id)) { await api(`/programs/${p.id}/save`, "DELETE"); SAVED.delete(p.id); }
+    else { await api(`/programs/${p.id}/save`, "POST"); SAVED.add(p.id); }
+    refresh();
+  };
+  const prac = el("a", "btn small", "💬 문의 연습하기"); prac.href = `/practice/${p.practice}`;
+  const apply = el("a", "btn small", "공식 페이지 ↗"); apply.href = p.apply_url; apply.target = "_blank"; apply.rel = "noopener";
+  row.append(save, prac, apply); c.append(row); return c;
+}
+function fill(id, items, empty) {
+  const box = document.getElementById(id); if (!box) return; box.innerHTML = "";
+  if (!items.length) box.append(el("p", "muted", empty));
+  items.forEach(p => box.append(card(p)));
+}
+async function refresh() {
+  const q = new URLSearchParams();
+  for (const k of ["field", "region", "mode", "q"]) { const v = document.getElementById("f_" + k).value; if (v) q.set(k, v); }
+  fill("rec", REC, "");
+  fill("list", await api("/programs?" + q), "조건에 맞는 프로그램이 없어요.");
+  fill("saved", await api("/programs/saved"), "아직 저장한 프로그램이 없어요.");
+}
+["f_field", "f_region", "f_mode"].forEach(i => document.getElementById(i).onchange = refresh);
+document.getElementById("f_q").oninput = refresh;
+refresh();
+</script>
+{% endblock %}

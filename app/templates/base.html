@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}한걸음{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+{% if nav is defined and active is defined and request.url.path not in ['/', '/onboarding'] %}
+<div class="layout">
+  <nav class="sidebar">
+    <div class="logo">🌱 한걸음 <span class="muted">(가칭)</span></div>
+    {% for key, href, label in nav %}
+      <a href="{{ href }}" class="{{ 'active' if key == active else '' }}">{{ label }}</a>
+    {% endfor %}
+  </nav>
+  <div class="main">
+    <div class="topbar"><a href="/settings">⚙ 설정</a></div>
+    <div class="content">{% block content %}{% endblock %}</div>
+  </div>
+</div>
+{% else %}
+  <div class="content">{% block bare %}{% endblock %}</div>
+{% endif %}
+<script src="/static/js/app.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}작은 실천{% endblock %}
+{% block content %}
+<h1>작은 실천</h1>
+<p class="muted">부담 가능한 것만 골라서 해보세요. 일부만 해봐도, 다음으로 미뤄도 괜찮아요.</p>
+
+<h2>나에게 맞는 실천</h2>
+<div class="grid" id="rec"></div>
+<h2>전체 활동</h2>
+<div class="grid" id="all"></div>
+
+<div id="logger" class="card" style="display:none">
+  <b id="logTitle"></b>
+  <div class="muted" id="logHow" style="margin:6px 0"></div>
+  <div class="row">
+    <button class="btn small" data-s="done">해봤어요</button>
+    <button class="btn small" data-s="partial">일부 시도했어요</button>
+    <button class="btn small" data-s="later">다음에 해볼래요</button>
+  </div>
+  <textarea id="note" rows="2" placeholder="(선택) 해보니 어땠나요?" style="margin-top:10px"></textarea>
+  <div id="logMsg" class="reason"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const REC = {{ recommended|tojson }}, ALL = {{ all_actions|tojson }};
+let current = null;
+function cardFor(a) {
+  const c = el("div", "card");
+  c.append(el("span", "tag", a.category), el("b", "", a.title), el("div", "muted", a.purpose));
+  if (a.reason) c.append(el("div", "reason", a.reason));
+  const b = el("button", "btn small", "상세 보기 / 기록하기");
+  b.onclick = () => { current = a; 
+    document.getElementById("logger").style.display = "block";
+    document.getElementById("logTitle").textContent = a.title;
+    document.getElementById("logHow").textContent = a.how;
+    document.getElementById("logMsg").textContent = "";
+    window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); };
+  c.append(b); return c;
+}
+REC.forEach(a => document.getElementById("rec").append(cardFor(a)));
+ALL.forEach(a => document.getElementById("all").append(cardFor(a)));
+document.querySelectorAll("[data-s]").forEach(b => b.onclick = async () => {
+  await api("/actions/log", "POST", { action_id: current.id, status: b.dataset.s,
+    note: document.getElementById("note").value.trim() || null });
+  document.getElementById("logMsg").textContent = "기록했어요. 나의 기록에서 확인할 수 있어요.";
+});
+</script>
+{% endblock %}

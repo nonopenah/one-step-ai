@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}AI 상황 연습{% endblock %}
+{% block content %}
+<h1>AI 상황 연습</h1>
+<p class="muted">실제 상황에 앞서 부담이 적은 환경에서 연습해요. 점수는 없어요.</p>
+
+<h2>맞춤 추천</h2>
+<div class="card">
+  <b>{{ rec.scenario.title }}</b> <span class="tag">난이도 {{ rec.difficulty }}</span>
+  <div class="reason">{{ rec.reason }}</div>
+  <a class="btn primary small" href="/practice/{{ rec.scenario.id }}?d={{ rec.difficulty }}">시작하기</a>
+</div>
+
+{% for cat in categories %}
+<h2>{{ cat }}</h2>
+<div class="grid">
+  {% for s in scenarios if s.category == cat %}
+  <div class="card">
+    <b>{{ s.title }}</b>
+    <div class="muted">{{ s.description }}</div>
+    <div class="muted" style="margin:6px 0">목표: {{ s.goal_text }}</div>
+    <a class="btn small" href="/practice/{{ s.id }}">설정하고 시작</a>
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}설정{% endblock %}
+{% block content %}
+<h1>설정 및 데이터 관리</h1>
+
+<div class="card">
+  <label><input type="checkbox" id="save_transcript" {{ 'checked' if user.save_transcript }}>
+    <b>전체 대화 텍스트 저장</b></label>
+  <div class="muted">기본은 OFF예요. 끄면 연습 요약과 피드백만 저장되고, 대화 원문은 연습이 끝나면 삭제돼요. 음성 원본은 보관하지 않아요.</div>
+</div>
+<div class="card">
+  <label><input type="checkbox" id="silence_hint" {{ 'checked' if user.silence_hint }}>
+    <b>말이 없을 때 화면에 도움 제안 표시</b></label>
+  <div class="muted">입력이 한동안 없으면 화면에 작게 도움을 제안해요. 자주 뜨지 않아요.</div>
+</div>
+<button class="btn primary" id="save">저장</button> <span id="msg" class="muted"></span>
+
+<h2>내 데이터</h2>
+<div class="card">
+  <div class="muted">상태 체크 응답, 연습·실천 기록, 관심 프로그램을 모두 삭제해요. 개인화 추천도 초기화돼요.</div>
+  <button class="btn small" id="wipe" style="margin-top:8px">모든 기록 삭제</button>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById("save").onclick = async () => {
+  await api("/settings", "PUT", {
+    save_transcript: document.getElementById("save_transcript").checked,
+    silence_hint: document.getElementById("silence_hint").checked });
+  document.getElementById("msg").textContent = "저장했어요.";
+};
+document.getElementById("wipe").onclick = async () => {
+  if (!confirm("정말 모든 기록을 삭제할까요? 되돌릴 수 없어요.")) return;
+  await api("/me/data", "DELETE"); location.href = "/";
+};
+</script>
+{% endblock %}

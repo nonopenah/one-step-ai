@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}{{ sc.title }}{% endblock %}
+{% block content %}
+<h1>{{ sc.title }}</h1>
+<p class="muted">상대: {{ sc.ai_role }} · 목표: {{ sc.goal_text }}</p>
+
+<div id="setup" class="card">
+  <b>시작 설정</b>
+  <label class="muted" style="display:block;margin-top:10px">연습 난이도 (대화 상황의 복잡성)</label>
+  <select id="difficulty">
+    <option value="1" {{ 'selected' if difficulty==1 }}>1 · 편안하게</option>
+    <option value="2" {{ 'selected' if difficulty==2 }}>2 · 조금 더 현실적으로</option>
+    <option value="3" {{ 'selected' if difficulty==3 }}>3 · 실전처럼</option>
+  </select>
+  <p class="muted">난이도가 높아도 힌트와 단계별 도움을 언제든 쓸 수 있어요. (이번 프로토타입은 텍스트 대화만 지원)</p>
+  <button class="btn primary" id="start">연습 시작</button>
+  <a class="btn ghost" href="/practice">뒤로</a>
+</div>
+
+<div id="room" style="display:none">
+  <div class="chat-wrap">
+    <div>
+      <div class="chat" id="chat"></div>
+      <div class="banner" id="silence">
+        <span>잠시 생각 중이신가요? 도움이 필요하면 말씀하세요.</span>
+        <button class="btn small" data-hint="1">힌트</button>
+        <button class="btn small" id="dismiss">괜찮아요</button>
+      </div>
+      <div class="composer">
+        <input type="text" id="input" placeholder="편하게 입력해보세요" maxlength="1000">
+        <button class="btn primary" id="send">보내기</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="card">
+        <b>도움</b>
+        <div class="row" style="margin-top:8px;flex-direction:column;align-items:stretch">
+          <button class="btn small" data-hint="1">💡 힌트</button>
+          <button class="btn small" data-hint="2">📝 답변 예시</button>
+          <button class="btn small" data-hint="3">🪜 단계별 안내</button>
+        </div>
+      </div>
+      <div class="card">
+        <b>대화 조절</b>
+        <label>질문 복잡도</label>
+        <select id="complexity"><option value="normal">보통</option><option value="simple">단순하게</option></select>
+        <label>AI 주도 정도</label>
+        <select id="lead"><option value="normal">보통</option><option value="low">내가 이끌게요</option></select>
+        <div class="muted" style="margin-top:6px">변경은 다음 AI 응답부터 적용돼요.</div>
+      </div>
+      <div class="card">
+        <button class="btn small" id="pause">⏸ 쉬어가기</button>
+        <button class="btn small" id="end">연습 마치기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="result" style="display:none"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SCENARIO = "{{ sc.id }}";
+const SILENCE_MS = {{ silence_seconds }} * 1000;
+const SILENCE_ON = {{ 'true' if silence_hint else 'false' }};
+let sid = null, paused = false, silenceTimer = null, lastBannerAt = 0;
+const $ = id => document.getElementById(id);
+
+function add(role, text) {
+  const m = el("div", "msg " + role, text);
+  $("chat").append(m); $("chat").scrollTop = $("chat").scrollHeight;
+}
+function resetSilence() {
+  clearTimeout(silenceTimer); $("silence").style.display = "none";
+  if (!SILENCE_ON || paused) return;
+  silenceTimer = setTimeout(() => {
+    // 반복 알림으로 압박하지 않도록 3분에 한 번만 표시
+    if (Date.now() - lastBannerAt > 180000) { $("silence").style.display = "block"; lastBannerAt = Date.now(); }
+  }, SILENCE_MS);
+}
+
+$("start").onclick = async () => {
+  const r = await api("/practice/start", "POST", { scenario_id: SCENARIO, difficulty: +$("difficulty").value });
+  sid = r.session_id; $("setup").style.display = "none"; $("room").style.display = "block";
+  add("ai", r.ai); resetSilence(); $("input").focus();
+};
+
+async function send() {
+  const text = $("input").value.trim();
+  if (!text || paused) return;
+  $("input").value = ""; add("user", text); resetSilence();
+  try {
+    const r = await api(`/practice/${sid}/message`, "POST",
+      { text, complexity: $("complexity").value, lead: $("lead").value });
+    add("ai", r.ai); resetSilence();
+  } catch (e) { add("sys", e.message); }
+}
+$("send").onclick = send;
+$("input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.isComposing) send(); });
+$("dismiss").onclick = () => { $("silence").style.display = "none"; };
+
+document.querySelectorAll("[data-hint]").forEach(b => b.onclick = async () => {
+  const r = await api(`/practice/${sid}/hint?level=${b.dataset.hint}`, "POST");
+  add("sys", "💡 " + r.hint); resetSilence();
+});
+
+$("pause").onclick = () => {
+  paused = !paused;
+  $("pause").textContent = paused ? "▶ 다시 시작" : "⏸ 쉬어가기";
+  $("input").disabled = $("send").disabled = paused;
+  add("sys", paused ? "잠시 쉬어가요. 준비되면 다시 시작하세요." : "다시 이어가요.");
+  resetSilence();
+};
+
+$("end").onclick = async () => {
+  const fb = await api(`/practice/${sid}/end`, "POST", {});
+  $("room").style.display = "none"; renderResult(fb);
+};
+
+function renderResult(fb) {
+  const box = $("result"); box.style.display = "block"; box.innerHTML = "";
+  const c = el("div", "card"); c.append(el("h2", "", "연습 요약"), el("p", "", fb.summary));
+  fb.goals.forEach(g => c.append(el("div", "goal", (g.done ? "✅ " : "⬜ ") + g.label)));
+  box.append(c);
+
+  const k = el("div", "card"); k.append(el("h2", "", "AI 코칭"));
+  fb.coaching.good.forEach(t => k.append(el("div", "", "👍 " + t)));
+  fb.coaching.next.forEach((t, i) => {
+    k.append(el("div", "", "➡ 다음에는: " + t));
+    k.append(el("div", "muted", "   예시) " + fb.coaching.examples[i]));
+  });
+  box.append(k);
+
+  const f = el("div", "card"); f.append(el("b", "", "(선택) 지금 느낀 부담은 어땠나요?"));
+  const row = el("div", "choices"); row.style.marginTop = "10px";
+  [1,2,3,4,5].forEach(n => {
+    const b = el("button", "btn small", String(n)); b.style.marginRight = "6px";
+    b.onclick = async () => {
+      await api(`/practice/${sid}/reflect`, "POST", { burden: n });
+      b.textContent = n + " ✓";
+    };
+    row.append(b);
+  });
+  f.append(row, el("div", "muted", "건너뛰어도 괜찮아요."));
+  box.append(f);
+
+  const n = el("div", "card"); n.append(el("h2", "", "다음에 해볼 수 있는 것"));
+  const r = el("div", "row");
+  const again = el("a", "btn", "다시 연습하기"); again.href = `/practice/${fb.next.retry_scenario}`; r.append(again);
+  if (fb.next.action) { const a = el("a", "btn", "작은 실천: " + fb.next.action.title); a.href = "/actions"; r.append(a); }
+  if (fb.next.programs.length) { const p = el("a", "btn", "관련 지원 프로그램 보기"); p.href = "/support"; r.append(p); }
+  const h = el("a", "btn ghost", "홈으로"); h.href = "/home"; r.append(h);
+  n.append(r); box.append(n);
+}
+</script>
+{% endblock %}

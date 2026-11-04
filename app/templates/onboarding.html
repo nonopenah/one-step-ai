@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block bare %}
+<div style="max-width:620px;margin:0 auto">
+  <h1>어디서부터 시작하면 좋을지 알려주세요</h1>
+  <p class="muted">진단이 아니라 시작점을 추천하기 위한 질문이에요. 모두 나중에 바꿀 수 있고, 건너뛰어도 돼요.</p>
+
+  <div class="card">
+    <b>1. 새로운 사람을 만나는 일이 지금 얼마나 부담되나요?</b>
+    <div class="choices" style="margin-top:10px">
+      {% for v, t in [(1,'거의 안 돼요'),(2,'조금'),(3,'보통'),(4,'꽤 커요'),(5,'매우 커요')] %}
+      <label><input type="radio" name="burden" value="{{ v }}" {{ 'checked' if v==3 }}>{{ t }}</label>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <b>2. 관심 있는 분야를 골라주세요 (여러 개 가능)</b>
+    <div class="choices" style="margin-top:10px">
+      {% for i in interests %}<label><input type="checkbox" name="interest" value="{{ i }}">{{ i }}</label>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <b>3. 해보고 싶은 것이 있다면 한 줄로 적어주세요 (선택)</b>
+    <input type="text" id="goal" maxlength="200" placeholder="예: 면접에서 말문이 막히지 않고 싶어요" style="margin-top:10px">
+  </div>
+
+  <div class="row">
+    <button class="btn primary" id="submit">추천 받기</button>
+    <a class="btn ghost" href="/home">건너뛰기</a>
+  </div>
+  <div id="result" style="margin-top:20px"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById("submit").onclick = async () => {
+  const burden = +document.querySelector("input[name=burden]:checked").value;
+  const interests = [...document.querySelectorAll("input[name=interest]:checked")].map(i => i.value);
+  const goal = document.getElementById("goal").value.trim() || null;
+  const r = await api("/onboarding", "POST", { burden, interests, goal });
+  const box = document.getElementById("result"); box.innerHTML = "";
+  const card = el("div", "card");
+  card.append(el("b", "", "이런 연습부터 해볼까요?"), el("h2", "", r.scenario.title),
+    el("div", "muted", r.scenario.description), el("div", "reason", r.reason),
+    el("div", "muted", "목표: " + r.scenario.goal_text));
+  const row = el("div", "row"); row.style.marginTop = "12px";
+  const go = el("a", "btn primary", "이 연습 시작하기"); go.href = `/practice/${r.scenario.id}?d=${r.difficulty}`;
+  const skip = el("a", "btn", "건너뛰고 홈으로"); skip.href = "/home";
+  row.append(go, skip); card.append(row); box.append(card);
+};
+</script>
+{% endblock %}

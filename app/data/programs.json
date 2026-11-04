@@ -1,0 +1,10 @@
+[
+  {"id": "p1", "title": "청년 취업 상담·진로 탐색 (샘플)", "field": "취업·진로", "region": "전국", "mode": "혼합", "org": "고용센터(샘플 데이터)", "summary": "1:1 취업 상담과 진로 탐색 프로그램", "target": "만 15~34세 청년", "apply_url": "https://www.work24.go.kr", "practice": "inquiry_call"},
+  {"id": "p2", "title": "직업훈련·일 경험 프로그램 (샘플)", "field": "취업·진로", "region": "서울", "mode": "오프라인", "org": "청년센터(샘플 데이터)", "summary": "단기 일 경험과 직업훈련 연계", "target": "만 19~34세 미취업 청년", "apply_url": "https://www.work24.go.kr", "practice": "inquiry_call"},
+  {"id": "p3", "title": "소규모 청년 교류 모임 (샘플)", "field": "대인관계", "region": "서울", "mode": "오프라인", "org": "청년공간(샘플 데이터)", "summary": "5~8명 규모의 취미 기반 교류 모임", "target": "만 19~34세 청년", "apply_url": "https://www.youthcenter.go.kr", "practice": "greeting"},
+  {"id": "p4", "title": "온라인 1:1 청년 대화 프로그램 (샘플)", "field": "대인관계", "region": "전국", "mode": "온라인", "org": "청년지원센터(샘플 데이터)", "summary": "비대면으로 시작하는 1:1 교류 활동", "target": "만 19~39세 고립·은둔 청년", "apply_url": "https://www.youthcenter.go.kr", "practice": "greeting"},
+  {"id": "p5", "title": "일상 회복 외부활동 지원 (샘플)", "field": "일상 회복", "region": "전국", "mode": "혼합", "org": "지역 지원센터(샘플 데이터)", "summary": "일상 리듬 회복과 외부 활동 동행 지원", "target": "고립·은둔 청년", "apply_url": "https://www.youthcenter.go.kr", "practice": "inquiry_call"},
+  {"id": "p6", "title": "청년 마음건강 상담 연계 (샘플)", "field": "전문 지원", "region": "전국", "mode": "혼합", "org": "정신건강복지센터(샘플 데이터)", "summary": "전문 상담 및 의료기관 연계", "target": "상담이 필요한 청년", "apply_url": "https://www.youthcenter.go.kr", "practice": "inquiry_call"},
+  {"id": "p7", "title": "청년 학업 복귀·교육 프로그램 (샘플)", "field": "교육·역량 개발", "region": "전국", "mode": "온라인", "org": "평생교육원(샘플 데이터)", "summary": "학업 복귀와 역량 개발 온라인 과정", "target": "만 19~34세 청년", "apply_url": "https://www.youthcenter.go.kr", "practice": "inquiry_call"},
+  {"id": "p8", "title": "청년 복지·경제 지원 안내 (샘플)", "field": "경제·복지", "region": "전국", "mode": "온라인", "org": "복지포털(샘플 데이터)", "summary": "청년 대상 복지·경제 지원 제도 안내", "target": "소득 요건 충족 청년", "apply_url": "https://www.youthcenter.go.kr", "practice": "inquiry_call"}
+]

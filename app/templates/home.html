@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}홈{% endblock %}
+{% block content %}
+<h1>오늘은 무엇을 해볼까요?</h1>
+<p class="muted">하고 싶은 것만 골라도 괜찮아요. 쉬어가는 날도 있어요.</p>
+
+<h2>나에게 추천하는 활동</h2>
+<div class="grid">
+  <div class="card">
+    <span class="tag">AI 연습</span>
+    <b>{{ rec_practice.scenario.title }}</b>
+    <div class="muted">{{ rec_practice.scenario.description }}</div>
+    <div class="reason">{{ rec_practice.reason }}</div>
+    <a class="btn primary small" href="/practice/{{ rec_practice.scenario.id }}?d={{ rec_practice.difficulty }}">시작하기</a>
+  </div>
+  {% for a in rec_actions %}
+  <div class="card">
+    <span class="tag">작은 실천</span>
+    <b>{{ a.title }}</b>
+    <div class="muted">{{ a.purpose }}</div>
+    <div class="reason">{{ a.reason }}</div>
+    <a class="btn small" href="/actions">보러 가기</a>
+  </div>
+  {% endfor %}
+</div>
+
+<h2>최근 연습</h2>
+{% if recent %}
+  {% for s in recent %}
+  <div class="card row" style="justify-content:space-between">
+    <span>{{ s.title }} <span class="muted">· {{ s.ended_at[:10] }}</span></span>
+    <a class="btn small" href="/practice/{{ s.scenario_id }}?d={{ s.difficulty }}">다시 연습하기</a>
+  </div>
+  {% endfor %}
+{% else %}<p class="muted">아직 기록이 없어요. 천천히 시작해도 괜찮아요.</p>{% endif %}
+{% endblock %}

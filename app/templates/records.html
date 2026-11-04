@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}나의 기록{% endblock %}
+{% block content %}
+<h1>나의 기록</h1>
+<p class="muted">다른 사람과 비교하지 않고, 과거의 나와 지금의 경험만 보여줘요. 쉬어간 기간은 실패가 아니에요.</p>
+
+{% if changes %}
+<h2>최근 변화</h2>
+<div class="card">{% for c in changes %}<div>🌱 {{ c }}</div>{% endfor %}</div>
+{% endif %}
+
+<h2>AI 연습 기록</h2>
+{% for s in sessions %}
+<div class="card" id="s{{ s.id }}">
+  <div class="row" style="justify-content:space-between">
+    <b>{{ s.title }}</b><span class="muted">{{ s.ended_at[:10] }} · 난이도 {{ s.difficulty }}</span>
+  </div>
+  <div class="muted">{{ s.feedback.summary }}</div>
+  {% for g in s.feedback.coaching.good %}<div>👍 {{ g }}</div>{% endfor %}
+  {% if s.burden %}<div class="muted">체감 부담: {{ s.burden }}/5</div>{% endif %}
+  <button class="btn ghost small" onclick="del('practice', {{ s.id }}, 's{{ s.id }}')">기록 삭제</button>
+</div>
+{% else %}<p class="muted">아직 연습 기록이 없어요.</p>{% endfor %}
+
+<h2>작은 실천 기록</h2>
+{% set labels = {'done': '해봤어요', 'partial': '일부 시도했어요', 'later': '다음에 해볼래요'} %}
+{% for l in logs %}
+<div class="card" id="a{{ l.id }}">
+  <div class="row" style="justify-content:space-between"><b>{{ l.title }}</b><span class="muted">{{ l.created_at[:10] }}</span></div>
+  <span class="tag">{{ labels[l.status] }}</span>
+  {% if l.note %}<div class="muted">“{{ l.note }}”</div>{% endif %}
+  <button class="btn ghost small" onclick="del('action', {{ l.id }}, 'a{{ l.id }}')">기록 삭제</button>
+</div>
+{% else %}<p class="muted">아직 실천 기록이 없어요.</p>{% endfor %}
+{% endblock %}
+{% block scripts %}
+<script>
+async function del(kind, id, elId) {
+  if (!confirm("이 기록을 삭제할까요?")) return;
+  await api(`/records/${kind}/${id}`, "DELETE");
+  document.getElementById(elId).remove();
+}
+</script>
+{% endblock %}
