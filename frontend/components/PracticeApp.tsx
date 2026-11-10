@@ -25,6 +25,8 @@ export default function PracticeApp() {
   const [screen, setScreen] = useState<Screen>("library");
   const [mode, setMode] = useState<Mode>("demo");
   const [online, setOnline] = useState<boolean | null>(null);
+  const [llmConfigured, setLlmConfigured] = useState<boolean | null>(null);
+  const [mockResponse, setMockResponse] = useState(false);
   const [scenarios, setScenarios] = useState<Scenario[]>(demoScenarios);
   const [scenario, setScenario] = useState<Scenario>(fallbackScenario);
   const [difficulty, setDifficulty] = useState<Difficulty>(1);
@@ -50,6 +52,9 @@ export default function PracticeApp() {
       .then((data) => {
         if (!mounted) return;
         setOnline(true);
+        void apiRequest<{ llm_configured: boolean }>("/runtime")
+          .then(runtime => { if (mounted) setLlmConfigured(runtime.llm_configured); })
+          .catch(() => { if (mounted) setLlmConfigured(null); });
         if (data.length) {
           setMode("live");
           setScenarios(data);
@@ -93,6 +98,7 @@ export default function PracticeApp() {
     setShowHelp(false);
     setShowExit(false);
     setBurden(null);
+    setMockResponse(false);
     userTurns.current = [];
   }
 
@@ -130,7 +136,8 @@ export default function PracticeApp() {
     try {
       if (mode === "live") {
         if (sid === null) throw new Error("세션 정보가 없어요. 다시 시작해 주세요.");
-        const data = await apiRequest<{ ai: string }>(`/practice/${sid}/message`, "POST", { text, complexity: "normal", lead: "normal" });
+        const data = await apiRequest<{ ai: string; response_mode?: "mock" | "llm" }>(`/practice/${sid}/message`, "POST", { text, complexity: "normal", lead: "normal" });
+        if (data.response_mode === "mock") setMockResponse(true);
         push("ai", data.ai);
       } else {
         push("ai", demoResponse(scenario, text, userTurns.current.length));
@@ -226,12 +233,13 @@ export default function PracticeApp() {
             <span className="breadcrumb">한걸음</span><ChevronRight size={16} className="breadcrumb-icon" /><span className="breadcrumb-current">{label}</span>
           </div>
           <div className="header-right">
-            <span className={`connection-pill ${mode === "demo" ? "demo" : "live"}`}><span className="connection-dot"/>{mode === "demo" ? "체험 모드" : "서버 연결"}</span>
+            <span className={`connection-pill ${mode === "demo" ? "demo" : "live"}`}><span className="connection-dot"/>{mode === "demo" ? "체험 모드" : mockResponse ? "규칙 기반 응답" : llmConfigured ? "AI API 설정됨" : "서버 연결 · 규칙 응답"}</span>
             <span className="header-avatar" aria-label="게스트">G</span>
           </div>
         </header>
 
         <div className="page-body">
+          {mode === "live" && (!llmConfigured || mockResponse) && <div className="demo-notice"><CircleHelp size={17}/><span>백엔드에 연결되어 있지만 현재 대화는 규칙 기반 예시 응답일 수 있어요. AI 응답을 사용하려면 모델 설정과 실제 호출 결과를 확인해 주세요.</span></div>}
           {mode === "demo" && <div className="demo-notice"><CircleHelp size={17}/><span>체험 모드예요. 대화와 결과는 예시로 표시되며 실제 AI 분석이 아닙니다.</span>{online === false && <span className="notice-extra">백엔드 미연결</span>}</div>}
           {screen === "library" && (
             <div className="page-enter">
@@ -310,7 +318,7 @@ export default function PracticeApp() {
           )}
 
           {screen === "result" && feedback && (
-            <div className="detail-container result-container page-enter"><div className="result-emblem"><Check size={28}/></div><span className="eyebrow center">PRACTICE COMPLETE</span><h1 className="result-title">오늘도 한 걸음,<br/><em>연습을 마쳤어요.</em></h1><p className="result-subtitle">끝까지 해보았다는 것만으로 충분히 의미 있어요.</p>{mode==="demo"&&<div className="demo-feedback-warning">이 결과는 데모용 예시이며 AI가 대화를 평가한 결과가 아니에요.</div>}
+            <div className="detail-container result-container page-enter"><div className="result-emblem"><Check size={28}/></div><span className="eyebrow center">PRACTICE COMPLETE</span><h1 className="result-title">오늘도 한 걸음,<br/><em>연습을 마쳤어요.</em></h1><p className="result-subtitle">끝까지 해보았다는 것만으로 충분히 의미 있어요.</p>{mode==="demo"?<div className="demo-feedback-warning">이 결과는 데모용 예시이며 AI가 대화를 평가한 결과가 아니에요.</div>:<div className="demo-feedback-warning">현재 피드백은 발화의 키워드를 기준으로 생성한 참고용 결과예요. AI 분석 모델은 아직 연결되지 않았어요.</div>}
               <div className="result-card"><div className="result-card-heading"><Sparkles size={20}/><h2>오늘의 연습</h2></div><p className="result-summary">{feedback.summary}</p><div className="result-goals">{feedback.goals.map(g=><div key={g.id} className="goal-item"><span className={g.done?"goal-check checked":"goal-check"}>{g.done?<Check size={14}/>:<span/>}</span>{g.label}</div>)}</div></div>
               <div className="result-card"><div className="result-card-heading"><Leaf size={20}/><h2>함께 돌아보기</h2></div>{feedback.coaching.good.length>0&&<div className="feedback-section"><span>해본 일</span>{feedback.coaching.good.map((g,i)=><p key={i}>{g}</p>)}</div>}<div className="feedback-section"><span>다음에 연습해볼 일</span>{feedback.coaching.next.length?feedback.coaching.next.map((n,i)=><div key={i}><p>{n}</p>{feedback.coaching.examples[i]&&<blockquote>예시 · {feedback.coaching.examples[i]}</blockquote>}</div>):<p>오늘의 연습을 충분히 마쳤어요.</p>}</div></div>
               <div className="reflect-card"><h3>이번 연습은 어땠나요? <span>선택</span></h3><p>부담 정도를 남겨도 되고 그냥 넘어가도 괜찮아요.</p><div className="burden-options">{[1,2,3,4,5].map(value=><button key={value} aria-label={`부담 정도 ${value}단계`} aria-pressed={burden===value} className={burden===value?"picked":""} onClick={()=>void saveBurden(value)}>{value}</button>)}</div><div className="burden-legend"><span>편안했어요</span><span>많이 부담됐어요</span></div></div>

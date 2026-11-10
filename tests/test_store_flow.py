@@ -1,5 +1,7 @@
 """시나리오 첫 발화·응답 모드·피드백 연결 검증."""
 
+from tests.test_flow import client  # noqa: F401
+
 
 def test_store_asks_user_to_initiate(client):
     r = client.post("/api/practice/start", json={"scenario_id": "store_question", "difficulty": 1})

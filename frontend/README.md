@@ -54,3 +54,25 @@ Next.js의 `/api/*` 요청은 기본적으로 `http://127.0.0.1:8000/api/*`로 �
 - 실제 사용자 테스트 및 접근성 점검
 
 이 PR은 기존 Python 백엔드 및 HTML 템플릿을 수정하지 않습니다.
+
+## Windows에서 백엔드까지 연결하기
+
+VS Code에서 터미널을 새로 열고, **프로젝트 최상위 폴더**에서 아래 명령을 실행합니다.
+
+```powershell
+py -m pip install -r requirements.txt
+py -m uvicorn app.main:app --reload --port 8000
+```
+
+그 다음 프론트엔드 터미널(별도 터미널)을 열어 다음을 실행합니다.
+
+```powershell
+cd frontend
+npm.cmd run dev
+```
+
+브라우저에서 `http://localhost:3000` 새로고침 → 화면 상단에 `서버 연결 · 규칙 응답` 등이 표시되면 FastAPI와 연결된 것입니다.
+
+실제 LLM을 사용하려면 `py -m pip install anthropic`으로 추가 설치한 뒤, 루트의 `.env`에 `ANTHROPIC_API_KEY`와 공급자에서 제공하는 실제 모델 ID를 `AI_MODEL`로 설정해야 합니다. 이 파일과 API 키는 GitHub에 올리지 마세요.
+
+백엔드에 LLM을 연결해도 지금의 **연습 종료 피드백은 키워드 기반**입니다. 별도의 평가 프롬프트 설계와 검증이 필요합니다.
