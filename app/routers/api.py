@@ -69,6 +69,12 @@ def rec_practice(uid: str = Depends(uid_dep)):
 
 
 # ---------- practice ----------
+@router.get("/runtime")
+def runtime_status():
+    """설정 여부만 표시합니다. 모델 호출 성공 여부는 각 응답으로 구별합니다."""
+    return {"llm_configured": bool(config.ANTHROPIC_API_KEY)}
+
+
 @router.get("/scenarios")
 def scenarios():
     return content.SCENARIOS
@@ -81,7 +87,8 @@ def practice_start(body: StartIn, uid: str = Depends(uid_dep)):
         raise HTTPException(404, "상황을 찾을 수 없어요.")
     sid = repo.create_session(uid, sc["id"], body.difficulty, body.mode)
     first = ai.opening(sc)
-    repo.add_message(sid, "ai", first)
+    if first:
+        repo.add_message(sid, "ai", first)
     return {"session_id": sid, "ai": first}
 
 
@@ -94,9 +101,9 @@ def practice_message(sid: int, body: MessageIn, uid: str = Depends(uid_dep)):
     repo.add_message(sid, "user", body.text)
     history = repo.get_messages(sid)
     # 조절값은 다음 AI 응답부터 적용 (기존 대화 맥락 유지)
-    text = ai.reply(sc, history, s["difficulty"], {"complexity": body.complexity, "lead": body.lead})
+    text, response_mode = ai.reply_with_mode(sc, history, s["difficulty"], {"complexity": body.complexity, "lead": body.lead})
     repo.add_message(sid, "ai", text)
-    return {"ai": text}
+    return {"ai": text, "response_mode": response_mode}
 
 
 @router.post("/practice/{sid}/hint")
