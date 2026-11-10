@@ -26,7 +26,7 @@ export default function PracticeApp() {
   const [mode, setMode] = useState<Mode>("demo");
   const [online, setOnline] = useState<boolean | null>(null);
   const [llmConfigured, setLlmConfigured] = useState<boolean | null>(null);
-  const [mockResponse, setMockResponse] = useState(false);
+  const [lastResponseMode, setLastResponseMode] = useState<"llm" | "mock" | null>(null);
   const [scenarios, setScenarios] = useState<Scenario[]>(demoScenarios);
   const [scenario, setScenario] = useState<Scenario>(fallbackScenario);
   const [difficulty, setDifficulty] = useState<Difficulty>(1);
@@ -100,7 +100,7 @@ export default function PracticeApp() {
     setShowHelp(false);
     setShowExit(false);
     setBurden(null);
-    setMockResponse(false);
+    setLastResponseMode(null);
     userTurns.current = [];
   }
 
@@ -139,7 +139,7 @@ export default function PracticeApp() {
       if (mode === "live") {
         if (sid === null) throw new Error("세션 정보가 없어요. 다시 시작해 주세요.");
         const data = await apiRequest<{ ai: string; response_mode?: "mock" | "llm" }>(`/practice/${sid}/message`, "POST", { text, complexity: "normal", lead: "normal" });
-        setMockResponse(data.response_mode === "mock");
+        setLastResponseMode(data.response_mode ?? null);
         push("ai", data.ai);
       } else {
         push("ai", demoResponse(scenario, text, userTurns.current.length));
@@ -238,13 +238,13 @@ export default function PracticeApp() {
             <span className="breadcrumb">한걸음</span><ChevronRight size={16} className="breadcrumb-icon" /><span className="breadcrumb-current">{label}</span>
           </div>
           <div className="header-right">
-            <span className={`connection-pill ${mode === "demo" ? "demo" : "live"}`}><span className="connection-dot"/>{mode === "demo" ? "체험 모드" : mockResponse ? "규칙 기반 응답" : llmConfigured ? "AI API 설정됨" : "서버 연결 · 규칙 응답"}</span>
+            <span className={`connection-pill ${mode === "demo" ? "demo" : "live"}`}><span className="connection-dot"/>{mode === "demo" ? "체험 모드" : lastResponseMode === "mock" ? "규칙 기반 응답" : lastResponseMode === "llm" ? "AI 응답 확인됨" : llmConfigured ? "AI API 설정됨" : "서버 연결 · 규칙 응답"}</span>
             <span className="header-avatar" aria-label="게스트">G</span>
           </div>
         </header>
 
         <div className="page-body">
-          {mode === "live" && (!llmConfigured || mockResponse) && <div className="demo-notice"><CircleHelp size={17}/><span>백엔드에 연결되어 있지만 현재 대화는 규칙 기반 예시 응답일 수 있어요. AI 응답을 사용하려면 모델 설정과 실제 호출 결과를 확인해 주세요.</span></div>}
+          {mode === "live" && (!llmConfigured || lastResponseMode === "mock") && <div className="demo-notice"><CircleHelp size={17}/><span>백엔드에 연결되어 있지만 현재 대화는 규칙 기반 예시 응답일 수 있어요. AI 응답을 사용하려면 모델 설정과 실제 호출 결과를 확인해 주세요.</span></div>}
           {mode === "demo" && <div className="demo-notice"><CircleHelp size={17}/><span>체험 모드예요. 대화와 결과는 예시로 표시되며 실제 AI 분석이 아닙니다.</span>{online === false && <span className="notice-extra">백엔드 미연결</span>}</div>}
           {screen === "library" && (
             <div className="page-enter">
