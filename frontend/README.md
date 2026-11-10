@@ -87,3 +87,19 @@ python scripts/smoke_test.py
 `[1/4]`부터 `[4/4]`까지 `OK`가 출력되고 마지막에 `PASS`가 나오면, 편의점 시나리오 시작 → 메시지 전송 → 피드백 조회까지 연결된 상태입니다.
 
 이 점검은 로컬 백엔드 API만 검증합니다. 화면에서 채팅이 정상 표시되는지까지 확인하려면 별도의 브라우저 점검이 필요합니다.
+
+## 브라우저 자동 테스트 (연동 검증)
+
+`frontend/e2e/practice.spec.ts`는 편의점 시나리오 선택부터 대화 메시지, 응답, 연습 종료 및 피드백 화면을 실제 Chromium 브라우저에서 확인합니다. 힌트와 쉬어가기 기능도 검사합니다.
+
+프로젝트 루트에서 `python -X utf8 -m pip install -r requirements.txt`를 실행하고, `frontend` 폴더에서 다음을 입력할 수 있습니다.
+
+```powershell
+npm.cmd install
+npx.cmd playwright install chromium
+npm.cmd run test:e2e
+```
+
+테스트 실행기는 백엔드(8000)와 프론트엔드(3000)를 자동으로 실행합니다. 기존 서버가 이미 실행 중인 경우 로컬에서 해당 서버를 재사용할 수 있습니다. `test:e2e`는 규칙 기반 응답 환경으로 검증하므로 실제 LLM API 키 없이 실행하세요.
+
+GitHub Actions의 `browser-e2e`에서도 자동으로 실행됩니다. **API 테스트와 브라우저 테스트는 별개**이며, 사용자의 개인 컴퓨터 환경까지 보장하지는 않습니다.
