@@ -14,5 +14,5 @@ if _env.exists():
 
 DB_PATH = os.getenv("DB_PATH", str(BASE_DIR.parent / "app.db"))
 ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-AI_MODEL = os.getenv("AI_MODEL", "claude-sonnet-5-5")
+AI_MODEL = os.getenv("AI_MODEL", "claude-haiku-5-5")
 SILENCE_SECONDS = int(os.getenv("SILENCE_SECONDS", "30"))
