@@ -98,10 +98,16 @@ def practice_message(sid: int, body: MessageIn, uid: str = Depends(uid_dep)):
     if s["ended_at"]:
         raise HTTPException(400, "이미 종료된 연습이에요.")
     sc = content.get_scenario(s["scenario_id"])
+    # 응답 생성이 성공하기 전에는 메시지를 저장하지 않는다.
+    # 실패한 요청이 대화 기록에 남아 재전송 시 중복되는 문제를 방지한다.
+    history = [*repo.get_messages(sid), {"role": "user", "content": body.text}]
+    try:
+        text, response_mode = ai.reply_with_mode(
+            sc, history, s["difficulty"], {"complexity": body.complexity, "lead": body.lead}
+        )
+    except ai.LLMUnavailableError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     repo.add_message(sid, "user", body.text)
-    history = repo.get_messages(sid)
-    # 조절값은 다음 AI 응답부터 적용 (기존 대화 맥락 유지)
-    text, response_mode = ai.reply_with_mode(sc, history, s["difficulty"], {"complexity": body.complexity, "lead": body.lead})
     repo.add_message(sid, "ai", text)
     return {"ai": text, "response_mode": response_mode}
 

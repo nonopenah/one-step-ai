@@ -74,8 +74,10 @@ export default function PracticeApp() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy, hint]);
 
-  function push(role: ChatMessage["role"], text: string) {
-    setMessages(prev => [...prev, { id: messageId.current++, role, text }]);
+  function push(role: ChatMessage["role"], text: string): number {
+    const id = messageId.current++;
+    setMessages(prev => [...prev, { id, role, text }]);
+    return id;
   }
 
   function chooseScenario(item: Scenario) {
@@ -131,20 +133,23 @@ export default function PracticeApp() {
     setDraft("");
     setHint("");
     userTurns.current = [...userTurns.current, text];
-    push("user", text);
+    const pendingMessageId = push("user", text);
     setBusy(true);
     try {
       if (mode === "live") {
         if (sid === null) throw new Error("세션 정보가 없어요. 다시 시작해 주세요.");
         const data = await apiRequest<{ ai: string; response_mode?: "mock" | "llm" }>(`/practice/${sid}/message`, "POST", { text, complexity: "normal", lead: "normal" });
-        if (data.response_mode === "mock") setMockResponse(true);
+        setMockResponse(data.response_mode === "mock");
         push("ai", data.ai);
       } else {
         push("ai", demoResponse(scenario, text, userTurns.current.length));
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "응답을 불러오지 못했어요.");
-      // Keep the user's message visible; the UI does not pretend the answer succeeded.
+      // 응답 실패 시 해당 발화는 서버에 저장되지 않았으므로 입력창으로 되돌려 재시도 가능하게 한다.
+      setMessages(prev => prev.filter(message => message.id !== pendingMessageId));
+      userTurns.current = userTurns.current.slice(0, -1);
+      setDraft(current => current || text);
     } finally {
       setBusy(false);
     }
