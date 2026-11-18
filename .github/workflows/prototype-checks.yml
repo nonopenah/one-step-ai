@@ -2,9 +2,9 @@ name: Prototype checks
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feat/nextjs-practice-ui-v0]
   push:
-    branches: [feat/nextjs-practice-ui-v0]
+    branches: [feat/nextjs-practice-ui-v0, feat/soft-neutral-ui-v1]
 
 jobs:
   backend:
